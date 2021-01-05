@@ -1,4 +1,4 @@
-package com.stansdevhouse.newsapp.ui.main
+package com.stansdevhouse.newsapp.ui
 
 import android.os.Bundle
 import android.view.LayoutInflater

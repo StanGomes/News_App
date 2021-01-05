@@ -1,4 +1,4 @@
-package com.stansdevhouse.newsapp.ui.main
+package com.stansdevhouse.newsapp.ui
 
 import androidx.lifecycle.ViewModel
 
