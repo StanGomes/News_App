@@ -2,8 +2,8 @@ package com.stansdevhouse.newsapp.di
 
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.stansdevhouse.newsapp.network.ApiService
-import com.stansdevhouse.newsapp.network.ApiServiceHelper
-import com.stansdevhouse.newsapp.network.ApiServiceHelperImpl
+import com.stansdevhouse.newsapp.network.CbcApiService
+import com.stansdevhouse.newsapp.network.CbcApiServiceDelegate
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -33,7 +33,9 @@ object NetworkModule {
         Retrofit.Builder()
             .client(okHttpClient)
             .baseUrl(BASE_URL)
-            .addConverterFactory(Json.asConverterFactory(contentType))
+            .addConverterFactory(Json {
+                ignoreUnknownKeys = true
+            }.asConverterFactory(contentType))
             .build()
 
     @Provides
@@ -42,6 +44,5 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun providesApiServiceHelper(apiServiceHelperImpl: ApiServiceHelperImpl): ApiServiceHelper =
-        apiServiceHelperImpl
+    fun providesApiServiceWrapper(cbcApiService: CbcApiService): CbcApiServiceDelegate = cbcApiService
 }

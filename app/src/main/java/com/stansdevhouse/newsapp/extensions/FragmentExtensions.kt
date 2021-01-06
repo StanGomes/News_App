@@ -5,7 +5,7 @@ import androidx.lifecycle.*
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
-
+// Shamelessly copied from https://gist.github.com/frel/5f3f928c27f4106ffd420a3d99c8037c
 /**
  * An extension to bind and unbind a value based on the view lifecycle of a Fragment.
  * The binding will be unbound in onDestroyView.
