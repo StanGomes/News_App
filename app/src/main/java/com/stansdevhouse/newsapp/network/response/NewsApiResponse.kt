@@ -20,18 +20,20 @@ data class NewsResponse(
     val updatedAt: Long? = null,
 ) {
     companion object {
-        fun NewsResponse.toDomainModel(): News =
-            News(
-                description,
-                id,
-                publishedAt,
-                source,
-                sourceId,
-                title,
-                type,
-                typeAttributes?.toDomainModel(),
-                updatedAt
-            )
+        fun List<NewsResponse>.toDomainModel(): List<News> =
+            this.map {
+                News(
+                    it.description,
+                    it.id,
+                    it.publishedAt,
+                    it.source,
+                    it.sourceId,
+                    it.title,
+                    it.type,
+                    it.typeAttributes?.toDomainModel(),
+                    it.updatedAt
+                )
+            }
     }
 }
 
