@@ -5,8 +5,6 @@ import com.stansdevhouse.newsapp.db.toDbModel
 import com.stansdevhouse.newsapp.db.toDomainModel
 import com.stansdevhouse.newsapp.domain.model.News
 import com.stansdevhouse.newsapp.network.RemoteDataSource
-import com.stansdevhouse.newsapp.util.Resource
-import com.stansdevhouse.newsapp.util.Status
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -22,12 +20,14 @@ class NewsRepository @Inject constructor(
     private val newsDao: NewsDao
 ) : NewsRepositoryDelegate {
 
-    private val simpleDateFormat = SimpleDateFormat(
-        "EEE, d MMM yyyy h:mm a",
-        Locale.getDefault()
-    )
+    private val simpleDateFormat by lazy {
+        SimpleDateFormat(
+            "EEE, d MMM yyyy h:mm a",
+            Locale.getDefault()
+        )
+    }
 
-    override fun getAllNews(): Flow<Resource<List<News>>> = flow {
+    override fun getAllNews(): Flow<List<News>> = flow {
         emit(getCachedNews())
     }.flowOn(Dispatchers.IO)
 
@@ -39,19 +39,18 @@ class NewsRepository @Inject constructor(
         emit(newsDao.getNewsByType(type).toDomainModel(simpleDateFormat))
     }.flowOn(Dispatchers.IO)
 
-    override suspend fun refresh() {
-        val networkResult = remoteDataSource.fetchAllNews()
-        if (networkResult.status == Status.SUCCESS) {
-            networkResult.data?.let {
-                newsDao.insertNews(it.toDbModel())
+    override suspend fun refresh(): Flow<RequestResult> = flow {
+        when (val networkResult = remoteDataSource.fetchAllNews()) {
+            RequestResult.Loading -> emit(RequestResult.Loading)
+            is RequestResult.Success -> {
+                emit(RequestResult.Success(networkResult.news))
+                newsDao.insertNews(networkResult.news.toDbModel())
             }
+            is RequestResult.Error -> emit(RequestResult.Error(networkResult.errorMessage))
         }
-    }
 
-    private fun getCachedNews(): Resource<List<News>> {
-        return Resource.success(
-            newsDao.getAllNews().toDomainModel(simpleDateFormat)
-        )
-    }
+    }.flowOn(Dispatchers.IO)
+
+    private fun getCachedNews(): List<News> = newsDao.getAllNews().toDomainModel(simpleDateFormat)
 
 }

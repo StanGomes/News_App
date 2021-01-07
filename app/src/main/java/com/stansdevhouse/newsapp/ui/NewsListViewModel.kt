@@ -6,18 +6,21 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.stansdevhouse.newsapp.domain.NewsRepositoryDelegate
+import com.stansdevhouse.newsapp.domain.RequestResult
 import com.stansdevhouse.newsapp.domain.model.News
-import com.stansdevhouse.newsapp.util.Status
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 
 
-sealed class Result {
-    object Loading : Result()
-    data class Success(val news: List<News>) : Result()
-    data class Error(val errorMessage: String) : Result()
+sealed class ViewState {
+    object Loading : ViewState()
+    data class Success(val news: List<News>) : ViewState()
+    data class Error(val errorMessage: String) : ViewState()
 }
 
 @FlowPreview
@@ -25,48 +28,38 @@ sealed class Result {
 class NewsListViewModel @ViewModelInject constructor(private val newsRepositoryDelegate: NewsRepositoryDelegate) :
     ViewModel() {
 
-    private val _newsListViewState = MutableLiveData<Result>(Result.Loading)
-    val newsListViewState: LiveData<Result> = _newsListViewState
+    private val _newsListViewState = MutableLiveData<ViewState>(ViewState.Loading)
+    val newsListViewState: LiveData<ViewState> = _newsListViewState
 
     private val _newsTypeLiveData = MutableLiveData<List<String>>()
     val newsTypeLiveData: LiveData<List<String>> = _newsTypeLiveData
 
-    private var selectedFilter: String? = null
-
     init {
         refreshNews()
-        fetchAllNews()
-        getAllTypes()
     }
 
     private fun getAllTypes() {
         viewModelScope.launch {
             newsRepositoryDelegate.getAllTypes()
+                .catch { e ->
+                    _newsListViewState.value =
+                        ViewState.Error(errorMessage = e.message ?: "Error fetching types")
+                }
                 .collectLatest { types ->
                     _newsTypeLiveData.value = types
                 }
         }
     }
 
-    private fun fetchAllNews() {
+    private fun getAllNews() {
         viewModelScope.launch {
             newsRepositoryDelegate.getAllNews()
-                .onStart {
-                    _newsListViewState.value = Result.Loading
-                }
-                .debounce(2000)
                 .catch { e ->
                     _newsListViewState.value =
-                        Result.Error(errorMessage = e.message ?: "Error fetching news")
+                        ViewState.Error(errorMessage = e.message ?: "Error fetching news")
                 }
                 .collectLatest {
-                    when (it.status) {
-                        Status.SUCCESS -> _newsListViewState.value =
-                            Result.Success(news = it.data ?: emptyList())
-                        Status.LOADING -> _newsListViewState.value = Result.Loading
-                        Status.ERROR -> _newsListViewState.value =
-                            Result.Error(errorMessage = it.message ?: "Error fetching news")
-                    }
+                    _newsListViewState.value = ViewState.Success(news = it)
                 }
         }
     }
@@ -74,26 +67,46 @@ class NewsListViewModel @ViewModelInject constructor(private val newsRepositoryD
     fun refreshNews() {
         viewModelScope.launch {
             newsRepositoryDelegate.refresh()
+                .onStart {
+                    _newsListViewState.value = ViewState.Loading
+                }
+                .catch { e ->
+                    _newsListViewState.value =
+                        ViewState.Error(errorMessage = e.message ?: "Error fetching news")
+                }
+                .collectLatest {
+                    when (it) {
+                        RequestResult.Loading ->  _newsListViewState.value = ViewState.Loading
+                        is RequestResult.Success -> {
+                            getAllNews()
+                            getAllTypes()
+                        }
+                        is RequestResult.Error -> {
+                            _newsListViewState.value = ViewState.Error(errorMessage = it.errorMessage)
+                            getAllNews()
+                            getAllTypes()
+                        }
+                    }
+                }
         }
     }
 
     fun filterChipSelected(type: CharSequence) {
-        selectedFilter = type.toString()
-        if (selectedFilter == "All") {
-            fetchAllNews()
+        if (type.toString() == "All") {
+            getAllNews()
         } else {
             viewModelScope.launch {
                 newsRepositoryDelegate
                     .getNewsByType(type.toString())
                     .onStart {
-                        _newsListViewState.value = Result.Loading
+                        _newsListViewState.value = ViewState.Loading
                     }
                     .catch { e ->
                         _newsListViewState.value =
-                            Result.Error(errorMessage = e.message ?: "Error fetching news")
+                            ViewState.Error(errorMessage = e.message ?: "Error fetching news")
                     }
                     .collect {
-                        _newsListViewState.value = Result.Success(it)
+                        _newsListViewState.value = ViewState.Success(it)
                     }
             }
         }

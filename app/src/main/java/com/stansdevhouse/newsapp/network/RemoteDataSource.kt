@@ -1,27 +1,26 @@
 package com.stansdevhouse.newsapp.network
 
-import com.stansdevhouse.newsapp.domain.model.News
+import com.stansdevhouse.newsapp.domain.RequestResult
 import com.stansdevhouse.newsapp.network.response.NewsResponse
 import com.stansdevhouse.newsapp.network.response.NewsResponse.Companion.toDomainModel
-import com.stansdevhouse.newsapp.util.Resource
 import retrofit2.Response
 import javax.inject.Inject
 
 class RemoteDataSource @Inject constructor(private val cbcApiServiceDelegate: CbcApiServiceDelegate) {
 
-    suspend fun fetchAllNews(): Resource<List<News>> = getResponse(request = { cbcApiServiceDelegate.getNewsList() })
+    suspend fun fetchAllNews(): RequestResult = getResponse(request = { cbcApiServiceDelegate.getNewsList() })
 
-    private suspend fun getResponse(request: suspend () -> Response<List<NewsResponse>>): Resource<List<News>> {
+    private suspend fun getResponse(request: suspend () -> Response<List<NewsResponse>>): RequestResult {
         return try {
-            Resource.loading(null)
+            RequestResult.Loading
             val result = request.invoke()
             if (result.isSuccessful) {
-                Resource.success(result.body()?.toDomainModel())
+                RequestResult.Success(result.body()?.toDomainModel() ?: emptyList())
             } else {
-                Resource.error("Error fetching news", null)
+                RequestResult.Error("Error fetching news")
             }
         } catch (e: Throwable) {
-            Resource.error(e.message ?: "Error fetching news", null)
+            RequestResult.Error(e.message ?: "Error fetching news")
         }
     }
 }

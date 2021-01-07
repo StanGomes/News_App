@@ -50,12 +50,12 @@ class NewsListFragment : Fragment() {
     private fun initObservers(view: View) {
         viewModel.newsListViewState.distinctUntilChanged().observe(viewLifecycleOwner) {
             when (it) {
-                Result.Loading -> binding.progress.visibility = View.VISIBLE
-                is Result.Success -> {
+                ViewState.Loading -> binding.progress.visibility = View.VISIBLE
+                is ViewState.Success -> {
                     binding.progress.visibility = View.GONE
                     adapter.submitList(it.news)
                 }
-                is Result.Error -> {
+                is ViewState.Error -> {
                     binding.progress.visibility = View.GONE
                     Snackbar.make(view, it.errorMessage, Snackbar.LENGTH_SHORT).show()
                 }
@@ -63,7 +63,6 @@ class NewsListFragment : Fragment() {
         }
 
         viewModel.newsTypeLiveData.distinctUntilChanged().observe(viewLifecycleOwner) { types ->
-
             types.forEachIndexed { index, type ->
                 val chipDrawableStyle = ChipDrawable.createFromAttributes(
                     requireContext(),
@@ -76,7 +75,8 @@ class NewsListFragment : Fragment() {
                         text = type
                         id = index + 1
                         setChipDrawable(chipDrawableStyle)
-                    })
+                    }
+                )
             }
             binding.filterChipGroup.invalidate()
         }
