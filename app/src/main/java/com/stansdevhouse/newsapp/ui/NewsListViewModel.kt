@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 sealed class Result {
     object Loading : Result()
     data class Success(val news: List<News>) : Result()
-    data class Error(val errorMessage: String?) : Result()
+    data class Error(val errorMessage: String) : Result()
 }
 
 @ExperimentalCoroutinesApi
@@ -37,12 +37,12 @@ class NewsListViewModel @ViewModelInject constructor(private val newsRepositoryD
                 .onStart {
                     _newsListViewState.value = Result.Loading
                 }
-                .catch { e -> _newsListViewState.value = Result.Error(errorMessage = e.message) }
+                .catch { e -> _newsListViewState.value = Result.Error(errorMessage = e.message ?: "Error refreshing") }
                 .collect {
                     when (it.status) {
                         Status.SUCCESS ->  _newsListViewState.value = Result.Success(news = it.data ?: emptyList())
                         Status.LOADING -> _newsListViewState.value = Result.Loading
-                        Status.ERROR -> _newsListViewState.value = Result.Error(errorMessage = it.message)
+                        Status.ERROR -> _newsListViewState.value = Result.Error(errorMessage = it.message ?: "Error refreshing")
                     }
                 }
         }

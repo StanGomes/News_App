@@ -1,6 +1,5 @@
 package com.stansdevhouse.newsapp.domain.model
 
-
 data class News(
     val description: String,
     val id: Int,
