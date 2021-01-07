@@ -12,7 +12,9 @@ import com.stansdevhouse.newsapp.databinding.NewsListFragmentBinding
 import com.stansdevhouse.newsapp.extensions.fragmentBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 
+@FlowPreview
 @ExperimentalCoroutinesApi
 @AndroidEntryPoint
 class NewsListFragment : Fragment() {
@@ -51,7 +53,7 @@ class NewsListFragment : Fragment() {
                 }
                 is Result.Error -> {
                     binding.progress.visibility = View.GONE
-                    Snackbar.make(view, it.errorMessage, Snackbar.LENGTH_SHORT)
+                    Snackbar.make(view, it.errorMessage, Snackbar.LENGTH_SHORT).show()
                 }
             }
         }

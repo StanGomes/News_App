@@ -29,8 +29,9 @@ object AppModule {
         Room.databaseBuilder(
             appContext,
             NewsDatabase::class.java,
-            "news_db"
-        ).build()
+            "news_db")
+            .fallbackToDestructiveMigration()
+            .build()
 
     @Provides
     fun providesNewsDao(newsDatabase: NewsDatabase): NewsDao = newsDatabase.newsDao()

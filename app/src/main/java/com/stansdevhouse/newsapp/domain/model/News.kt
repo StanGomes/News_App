@@ -10,6 +10,7 @@ data class News(
     val type: String?,
     val typeAttributes: TypeAttributes?,
     val updatedAt: Long?,
+    val readablePublishedAt: String? = null
 )
 
 data class TypeAttributes(

@@ -16,6 +16,7 @@ class NewsListAdapter : ListAdapter<News, NewsListAdapter.NewsListViewHolder>(Ne
     inner class NewsListViewHolder(private val newsListItem: NewsItemRowBinding) : RecyclerView.ViewHolder(newsListItem.root) {
         fun bind(news: News) {
             newsListItem.title.text = news.title
+            newsListItem.timeStamp.text = news.readablePublishedAt
             Glide.with(newsListItem.root.context)
                 .load(news.typeAttributes?.imageLarge)
                 .into(newsListItem.newsImage)

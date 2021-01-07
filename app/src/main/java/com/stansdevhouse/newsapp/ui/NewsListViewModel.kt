@@ -9,8 +9,10 @@ import com.stansdevhouse.newsapp.domain.NewsRepositoryDelegate
 import com.stansdevhouse.newsapp.domain.model.News
 import com.stansdevhouse.newsapp.util.Status
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 
@@ -21,6 +23,7 @@ sealed class Result {
     data class Error(val errorMessage: String) : Result()
 }
 
+@FlowPreview
 @ExperimentalCoroutinesApi
 class NewsListViewModel @ViewModelInject constructor(private val newsRepositoryDelegate: NewsRepositoryDelegate) : ViewModel() {
 
@@ -37,12 +40,13 @@ class NewsListViewModel @ViewModelInject constructor(private val newsRepositoryD
                 .onStart {
                     _newsListViewState.value = Result.Loading
                 }
-                .catch { e -> _newsListViewState.value = Result.Error(errorMessage = e.message ?: "Error refreshing") }
+                .debounce(2000)
+                .catch { e -> _newsListViewState.value = Result.Error(errorMessage = e.message ?: "\"Error fetching news") }
                 .collect {
                     when (it.status) {
                         Status.SUCCESS ->  _newsListViewState.value = Result.Success(news = it.data ?: emptyList())
                         Status.LOADING -> _newsListViewState.value = Result.Loading
-                        Status.ERROR -> _newsListViewState.value = Result.Error(errorMessage = it.message ?: "Error refreshing")
+                        Status.ERROR -> _newsListViewState.value = Result.Error(errorMessage = it.message ?: "Error fetching news")
                     }
                 }
         }

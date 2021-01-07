@@ -23,8 +23,7 @@
                 android:id="@+id/title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingHorizontal="8dp"
-                android:paddingVertical="8dp"
+                android:padding="8dp"
                 app:layout_constraintBottom_toTopOf="@id/newsImage"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -36,12 +35,23 @@
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:contentDescription="News Image"
-                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintBottom_toTopOf="@id/timeStamp"
                 app:layout_constraintDimensionRatio="H,16:9"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/title"
                 tools:src="@drawable/electoral_college_protests" />
+
+            <TextView
+                android:id="@+id/timeStamp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Wed, 4 Jul 2001 12:08"
+                android:padding="8dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/newsImage"
+                app:layout_constraintStart_toStartOf="parent"
+                />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
 

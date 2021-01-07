@@ -12,21 +12,17 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import java.text.SimpleDateFormat
+import java.util.*
 import javax.inject.Inject
 
 @ExperimentalCoroutinesApi
 class NewsRepository @Inject constructor(
     private val remoteDataSource: RemoteDataSource,
-    private val newsDao: NewsDao
-) : NewsRepositoryDelegate {
+    private val newsDao: NewsDao) : NewsRepositoryDelegate {
 
     override fun getAllNews(): Flow<Resource<List<News>>> {
         return flow {
-            getCachedNews().run {
-                if (this.data.isNullOrEmpty().not()) {
-                    emit(this)
-                }
-            }
             val networkResult = remoteDataSource.fetchAllNews()
             if (networkResult.status == Status.SUCCESS) {
                 networkResult.data?.let {
@@ -44,6 +40,13 @@ class NewsRepository @Inject constructor(
         }.flowOn(Dispatchers.IO)
     }
 
-    private fun getCachedNews(): Resource<List<News>> = Resource.success(newsDao.getAllNews().toDomainModel())
+    private fun getCachedNews(): Resource<List<News>> = Resource.success(
+        newsDao.getAllNews().toDomainModel(
+            SimpleDateFormat(
+                "EEE, d MMM yyyy h:mm a",
+                Locale.getDefault()
+            )
+        )
+    )
 
 }

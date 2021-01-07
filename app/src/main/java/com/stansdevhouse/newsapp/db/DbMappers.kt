@@ -1,8 +1,9 @@
 package com.stansdevhouse.newsapp.db
 
 import com.stansdevhouse.newsapp.domain.model.*
+import java.text.SimpleDateFormat
 
-fun List<NewsEntity>.toDomainModel(): List<News> =
+fun List<NewsEntity>.toDomainModel(simpleDateFormat: SimpleDateFormat): List<News> =
     this.map {
         News(
             it.description,
@@ -13,7 +14,8 @@ fun List<NewsEntity>.toDomainModel(): List<News> =
             it.title,
             it.type,
             it.typeAttributes?.toDomainModel(),
-            it.updatedAt
+            it.updatedAt,
+            readablePublishedAt = simpleDateFormat.format(it.publishedAt)
         )
     }
 
