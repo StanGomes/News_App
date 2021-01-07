@@ -19,34 +19,39 @@ import javax.inject.Inject
 @ExperimentalCoroutinesApi
 class NewsRepository @Inject constructor(
     private val remoteDataSource: RemoteDataSource,
-    private val newsDao: NewsDao) : NewsRepositoryDelegate {
+    private val newsDao: NewsDao
+) : NewsRepositoryDelegate {
 
-    override fun getAllNews(): Flow<Resource<List<News>>> {
-        return flow {
-            val networkResult = remoteDataSource.fetchAllNews()
-            if (networkResult.status == Status.SUCCESS) {
-                networkResult.data?.let {
-                    newsDao.insertNews(it.toDbModel())
-                }
-                emit(getCachedNews())
+    private val simpleDateFormat = SimpleDateFormat(
+        "EEE, d MMM yyyy h:mm a",
+        Locale.getDefault()
+    )
+
+    override fun getAllNews(): Flow<Resource<List<News>>> = flow {
+        emit(getCachedNews())
+    }.flowOn(Dispatchers.IO)
+
+    override fun getAllTypes(): Flow<List<String>> = flow {
+        emit(newsDao.getTypes().map { it.capitalize(Locale.getDefault()) })
+    }.flowOn(Dispatchers.IO)
+
+    override fun getNewsByType(type: String): Flow<List<News>> = flow {
+        emit(newsDao.getNewsByType(type).toDomainModel(simpleDateFormat))
+    }.flowOn(Dispatchers.IO)
+
+    override suspend fun refresh() {
+        val networkResult = remoteDataSource.fetchAllNews()
+        if (networkResult.status == Status.SUCCESS) {
+            networkResult.data?.let {
+                newsDao.insertNews(it.toDbModel())
             }
-            if (networkResult.status == Status.ERROR) {
-                getCachedNews().run {
-                    if (this.data.isNullOrEmpty()) {
-                        emit(networkResult)
-                    } else emit(this)
-                }
-            }
-        }.flowOn(Dispatchers.IO)
+        }
     }
 
-    private fun getCachedNews(): Resource<List<News>> = Resource.success(
-        newsDao.getAllNews().toDomainModel(
-            SimpleDateFormat(
-                "EEE, d MMM yyyy h:mm a",
-                Locale.getDefault()
-            )
+    private fun getCachedNews(): Resource<List<News>> {
+        return Resource.success(
+            newsDao.getAllNews().toDomainModel(simpleDateFormat)
         )
-    )
+    }
 
 }

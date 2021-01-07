@@ -7,7 +7,10 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.distinctUntilChanged
+import com.google.android.material.chip.Chip
+import com.google.android.material.chip.ChipDrawable
 import com.google.android.material.snackbar.Snackbar
+import com.stansdevhouse.newsapp.R
 import com.stansdevhouse.newsapp.databinding.NewsListFragmentBinding
 import com.stansdevhouse.newsapp.extensions.fragmentBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -38,13 +41,14 @@ class NewsListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.newsList.adapter = adapter
+        initViews()
 
-        binding.refreshBtn.setOnClickListener {
-            viewModel.refreshNews()
-        }
+        initObservers(view)
 
-        viewModel.newsListViewState.distinctUntilChanged().observe(viewLifecycleOwner){
+    }
+
+    private fun initObservers(view: View) {
+        viewModel.newsListViewState.distinctUntilChanged().observe(viewLifecycleOwner) {
             when (it) {
                 Result.Loading -> binding.progress.visibility = View.VISIBLE
                 is Result.Success -> {
@@ -55,6 +59,40 @@ class NewsListFragment : Fragment() {
                     binding.progress.visibility = View.GONE
                     Snackbar.make(view, it.errorMessage, Snackbar.LENGTH_SHORT).show()
                 }
+            }
+        }
+
+        viewModel.newsTypeLiveData.distinctUntilChanged().observe(viewLifecycleOwner) { types ->
+
+            types.forEachIndexed { index, type ->
+                val chipDrawableStyle = ChipDrawable.createFromAttributes(
+                    requireContext(),
+                    null,
+                    0,
+                    R.style.Widget_MaterialComponents_Chip_Choice
+                )
+                binding.filterChipGroup.addView(
+                    Chip(context).apply {
+                        text = type
+                        id = index + 1
+                        setChipDrawable(chipDrawableStyle)
+                    })
+            }
+            binding.filterChipGroup.invalidate()
+        }
+    }
+
+    private fun initViews() {
+        binding.newsList.adapter = adapter
+
+        binding.refreshBtn.setOnClickListener {
+            viewModel.refreshNews()
+        }
+
+        binding.filterChipGroup.setOnCheckedChangeListener { group, checkedId ->
+            val chip = group.findViewById<Chip>(checkedId)
+            chip?.let {
+                viewModel.filterChipSelected(it.text)
             }
         }
     }
