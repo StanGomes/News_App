@@ -19,25 +19,36 @@ import kotlinx.coroutines.launch
 
 sealed class ViewState {
     object Loading : ViewState()
+    data class OpenUrl(val url: String): ViewState()
     data class Success(val news: List<News>) : ViewState()
     data class Error(val errorMessage: String) : ViewState()
 }
 
 @FlowPreview
 @ExperimentalCoroutinesApi
-class NewsListViewModel @ViewModelInject constructor(private val newsRepositoryDelegate: NewsRepositoryDelegate) :
-    ViewModel() {
+class NewsListViewModel @ViewModelInject constructor(private val newsRepositoryDelegate: NewsRepositoryDelegate) : ViewModel() {
 
+    //region liveData
     private val _newsListViewState = MutableLiveData<ViewState>(ViewState.Loading)
     val newsListViewState: LiveData<ViewState> = _newsListViewState
 
     private val _newsTypeLiveData = MutableLiveData<List<String>>()
     val newsTypeLiveData: LiveData<List<String>> = _newsTypeLiveData
+    //endregion
 
+    private companion object {
+        private const val ALL_TEXT = "All"
+    }
+
+    private var selectedFilter = ALL_TEXT
+
+    //region init
     init {
         refreshNews()
     }
+    //endregion
 
+    //region private helpers
     private fun getAllTypes() {
         viewModelScope.launch {
             newsRepositoryDelegate.getAllTypes()
@@ -63,7 +74,9 @@ class NewsListViewModel @ViewModelInject constructor(private val newsRepositoryD
                 }
         }
     }
+    //endregion
 
+    //region public helpers
     fun refreshNews() {
         viewModelScope.launch {
             newsRepositoryDelegate.refresh()
@@ -78,7 +91,7 @@ class NewsListViewModel @ViewModelInject constructor(private val newsRepositoryD
                     when (it) {
                         RequestResult.Loading ->  _newsListViewState.value = ViewState.Loading
                         is RequestResult.Success -> {
-                            getAllNews()
+                            filterChipSelected(selectedFilter)
                             getAllTypes()
                         }
                         is RequestResult.Error -> {
@@ -92,12 +105,14 @@ class NewsListViewModel @ViewModelInject constructor(private val newsRepositoryD
     }
 
     fun filterChipSelected(type: CharSequence) {
-        if (type.toString() == "All") {
+        val typeString = type.toString()
+        selectedFilter = typeString
+        if (typeString == ALL_TEXT) {
             getAllNews()
         } else {
             viewModelScope.launch {
                 newsRepositoryDelegate
-                    .getNewsByType(type.toString())
+                    .getNewsByType(typeString)
                     .onStart {
                         _newsListViewState.value = ViewState.Loading
                     }
@@ -111,5 +126,11 @@ class NewsListViewModel @ViewModelInject constructor(private val newsRepositoryD
             }
         }
     }
+
+    fun onCardClicked(url: String) {
+        _newsListViewState.value = ViewState.OpenUrl(url)
+    }
+    //endregion
+
 
 }

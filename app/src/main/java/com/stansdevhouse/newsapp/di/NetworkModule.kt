@@ -1,5 +1,6 @@
 package com.stansdevhouse.newsapp.di
 
+import com.facebook.stetho.okhttp3.StethoInterceptor
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.stansdevhouse.newsapp.network.ApiService
 import com.stansdevhouse.newsapp.network.CbcApiService
@@ -25,7 +26,7 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun providesOkHttpClient(): OkHttpClient = OkHttpClient.Builder().build()
+    fun providesOkHttpClient(): OkHttpClient = OkHttpClient.Builder().addNetworkInterceptor(StethoInterceptor()).build()
 
     @Provides
     @Singleton

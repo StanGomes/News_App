@@ -6,6 +6,7 @@
     android:layout_height="wrap_content">
 
     <com.google.android.material.card.MaterialCardView
+        android:id="@+id/newsCard"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="16dp"
@@ -34,7 +35,7 @@
                 android:id="@+id/newsImage"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
-                android:contentDescription="News Image"
+                android:contentDescription="@string/news_image"
                 app:layout_constraintBottom_toTopOf="@id/timeStamp"
                 app:layout_constraintDimensionRatio="H,16:9"
                 app:layout_constraintEnd_toEndOf="parent"

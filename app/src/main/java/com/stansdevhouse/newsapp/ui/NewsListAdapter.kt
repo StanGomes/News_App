@@ -9,27 +9,45 @@ import com.bumptech.glide.Glide
 import com.stansdevhouse.newsapp.databinding.NewsItemRowBinding
 import com.stansdevhouse.newsapp.domain.model.News
 
-class NewsListAdapter : ListAdapter<News, NewsListAdapter.NewsListViewHolder>(NewsListDiffCallback()) {
+class NewsListAdapter(private val onClick: (String) -> Unit) :
+    ListAdapter<News, NewsListViewHolder>(NewsListDiffCallback()) {
 
     private lateinit var binding: NewsItemRowBinding
 
-    inner class NewsListViewHolder(private val newsListItem: NewsItemRowBinding) : RecyclerView.ViewHolder(newsListItem.root) {
-        fun bind(news: News) {
-            newsListItem.title.text = news.title
-            newsListItem.timeStamp.text = news.readablePublishedAt
-            Glide.with(newsListItem.root.context)
-                .load(news.typeAttributes?.imageLarge)
-                .into(newsListItem.newsImage)
-        }
-    }
-
+    //region adapter implementations
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NewsListViewHolder {
         binding = NewsItemRowBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return NewsListViewHolder(binding)
+        return NewsListViewHolder(binding, onClick)
     }
 
     override fun onBindViewHolder(holder: NewsListViewHolder, position: Int) {
         holder.bind(getItem(position))
+    }
+    //endregion
+}
+
+class NewsListViewHolder(
+    private val newsListItem: NewsItemRowBinding,
+    private val onClick: (String) -> Unit
+) : RecyclerView.ViewHolder(newsListItem.root) {
+
+    companion object {
+        private const val DEFAULT_URL = "https://www.cbc.ca"
+    }
+
+    fun bind(news: News) {
+        newsListItem.title.text = news.title
+        newsListItem.timeStamp.text = news.readablePublishedAt
+
+        Glide.with(newsListItem.root.context)
+            .load(news.typeAttributes?.imageLarge)
+            .into(newsListItem.newsImage)
+
+        newsListItem.newsCard.setOnClickListener {
+            onClick.invoke(
+                news.typeAttributes?.url ?: DEFAULT_URL
+            )
+        }
     }
 }
 
