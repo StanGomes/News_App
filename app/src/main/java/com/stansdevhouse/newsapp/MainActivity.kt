@@ -16,7 +16,6 @@ import kotlinx.coroutines.FlowPreview
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         MainActivityBinding.inflate(layoutInflater).apply {
