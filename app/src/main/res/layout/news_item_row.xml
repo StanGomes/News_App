@@ -25,11 +25,12 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:padding="8dp"
+                android:textAppearance="?attr/textAppearanceBody1"
                 app:layout_constraintBottom_toTopOf="@id/newsImage"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                tools:text="Trudeau says Canadians" />
+                tools:text="Trump finally concedes election, condemns attack on U.S. Capitol by supporters he incited yesterday" />
 
             <ImageView
                 android:id="@+id/newsImage"
@@ -49,6 +50,7 @@
                 android:layout_height="wrap_content"
                 tools:text="Wed, 4 Jul 2001 12:08"
                 android:padding="8dp"
+                android:textAppearance="?attr/textAppearanceBody2"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/newsImage"
                 app:layout_constraintStart_toStartOf="parent"
