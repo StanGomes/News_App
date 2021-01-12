@@ -45,7 +45,7 @@ class LiveEvent<T> : MediatorLiveData<T>() {
 
     @MainThread
     override fun setValue(t: T?) {
-        if (observers.isEmpty()) {
+        if (observers.size == 0) {
             pending.set(true) // if there are no observers mark a pending flag so new observers will pick up the event
         } else {
             pending.set(false) // if there are some,then the existing observers consume the data and new ones have to wait for the next setValue

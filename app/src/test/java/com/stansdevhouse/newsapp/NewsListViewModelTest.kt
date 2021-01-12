@@ -7,7 +7,9 @@ import androidx.lifecycle.Observer
 import com.stansdevhouse.newsapp.domain.NewsRepository
 import com.stansdevhouse.newsapp.domain.RequestResult
 import com.stansdevhouse.newsapp.domain.model.News
+import com.stansdevhouse.newsapp.ui.Event
 import com.stansdevhouse.newsapp.ui.NewsListViewModel
+import com.stansdevhouse.newsapp.util.LiveEvent
 import io.mockk.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.flowOf
@@ -60,9 +62,11 @@ class NewsListViewModelTest {
         it.type == "video"
     }
 
+    private val liveEventObserver = Observer<Event>{}
+
     @Before
     fun setup() {
-        Dispatchers.setMain(mainThreadSurrogate)
+//        Dispatchers.setMain(mainThreadSurrogate)
         MockKAnnotations.init(this)
 
         coEvery {
@@ -80,6 +84,8 @@ class NewsListViewModelTest {
         coEvery {
             newsRepository.getNewsByType("video")
         }.returns(flowOf(mockVideoTypeNews))
+
+        viewModel = NewsListViewModel(newsRepository)
     }
 
     @After
@@ -91,7 +97,6 @@ class NewsListViewModelTest {
     @Test
     fun whenDbUpdatesThenUpdateNewsLiveData() {
         //GIVEN viewModel init
-        viewModel = NewsListViewModel(newsRepository)
 
         //WHEN repository refreshed
         coVerify {
@@ -105,7 +110,6 @@ class NewsListViewModelTest {
     @Test
     fun whenDbUpdatesThenUpdateNewsTypeLiveData() {
         //GIVEN viewModel init
-        viewModel = NewsListViewModel(newsRepository)
 
         //WHEN repository refreshed
         coVerify {
@@ -119,7 +123,6 @@ class NewsListViewModelTest {
     @Test
     fun whenFilterSelectedThenShouldFilteredNews() {
         //GIVEN
-        viewModel = NewsListViewModel(newsRepository)
 
         //WHEN
         viewModel.getNews("video")

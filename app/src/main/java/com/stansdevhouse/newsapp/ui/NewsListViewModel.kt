@@ -18,10 +18,11 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 
 
-sealed class ViewState {
-    object Loading : ViewState()
-    object Success : ViewState()
-    data class Error(val errorMessage: String) : ViewState()
+sealed class Event {
+    object Loading : Event()
+    object Success : Event()
+    data class Error(val errorMessage: String) : Event()
+    data class OpenUrl(val url: String) : Event()
 }
 
 @FlowPreview
@@ -29,17 +30,13 @@ sealed class ViewState {
 class NewsListViewModel @ViewModelInject constructor(private val newsRepositoryDelegate: NewsRepositoryDelegate) : ViewModel() {
 
     //region liveData
-    private val _newsListViewState = MutableLiveData<ViewState>()
-    val newsListViewState: LiveData<ViewState> = _newsListViewState
+    val liveEvent: LiveEvent<Event> = LiveEvent()
 
     private val _newsLiveData = MutableLiveData<List<News>>()
     val newsLiveData: LiveData<List<News>> = _newsLiveData
 
     private val _newsTypeLiveData = MutableLiveData<List<String>>()
     val newsTypeLiveData: LiveData<List<String>> = _newsTypeLiveData
-
-    private val _urlLiveEvent = LiveEvent<String>()
-    val urlLiveEvent = _urlLiveEvent
     //endregion
 
     private companion object {
@@ -59,8 +56,8 @@ class NewsListViewModel @ViewModelInject constructor(private val newsRepositoryD
         viewModelScope.launch {
             newsRepositoryDelegate.getAllTypes()
                 .catch { e ->
-                    _newsListViewState.value =
-                        ViewState.Error(errorMessage = e.message ?: "Error fetching types")
+                    liveEvent.value =
+                        Event.Error(errorMessage = e.message ?: "Error fetching types")
                 }
                 .collectLatest { types ->
                     _newsTypeLiveData.value = types
@@ -72,8 +69,8 @@ class NewsListViewModel @ViewModelInject constructor(private val newsRepositoryD
         viewModelScope.launch {
             newsRepositoryDelegate.getAllNews()
                 .catch { e ->
-                    _newsListViewState.value =
-                        ViewState.Error(errorMessage = e.message ?: "Error fetching news")
+                    liveEvent.value =
+                        Event.Error(errorMessage = e.message ?: "Error fetching news")
                 }
                 .collectLatest {
                     _newsLiveData.value = it
@@ -86,11 +83,11 @@ class NewsListViewModel @ViewModelInject constructor(private val newsRepositoryD
             newsRepositoryDelegate
                 .getNewsByType(typeString)
                 .onStart {
-                    _newsListViewState.value = ViewState.Loading
+                    liveEvent.value = Event.Loading
                 }
                 .catch { e ->
-                    _newsListViewState.value =
-                        ViewState.Error(errorMessage = e.message ?: "Error fetching news")
+                    liveEvent.value =
+                        Event.Error(errorMessage = e.message ?: "Error fetching news")
                 }
                 .collect {
                     _newsLiveData.value = it
@@ -102,22 +99,22 @@ class NewsListViewModel @ViewModelInject constructor(private val newsRepositoryD
         viewModelScope.launch {
             newsRepositoryDelegate.refresh()
                 .onStart {
-                    _newsListViewState.value = ViewState.Loading
+                    liveEvent.value = Event.Loading
                 }
                 .catch { e ->
-                    _newsListViewState.value =
-                        ViewState.Error(errorMessage = e.message ?: "Error fetching news")
+                    liveEvent.value =
+                        Event.Error(errorMessage = e.message ?: "Error fetching news")
                 }
                 .collectLatest {
                     when (it) {
-                        RequestResult.Loading ->  _newsListViewState.value = ViewState.Loading
+                        RequestResult.Loading ->  liveEvent.value = Event.Loading
                         is RequestResult.Success -> {
-                            _newsListViewState.value = ViewState.Success
+                            liveEvent.value = Event.Success
                             getNews(selectedFilter)
                             getAllTypes()
                         }
                         is RequestResult.Error -> {
-                            _newsListViewState.value = ViewState.Error(errorMessage = it.errorMessage)
+                            liveEvent.value = Event.Error(errorMessage = it.errorMessage)
                             getAllNews()
                             getAllTypes()
                         }
@@ -144,7 +141,7 @@ class NewsListViewModel @ViewModelInject constructor(private val newsRepositoryD
     }
 
     fun onCardClicked(url: String) {
-        _urlLiveEvent.value = url
+        liveEvent.value = Event.OpenUrl(url)
     }
     //endregion
 

@@ -74,14 +74,19 @@ class NewsListFragment : Fragment() {
     }
 
     private fun initObservers(view: View) {
-        viewModel.newsListViewState.observe(viewLifecycleOwner) {
+        viewModel.liveEvent.observe(viewLifecycleOwner) {
             when (it) {
-                ViewState.Loading -> binding.progress.visibility = View.VISIBLE
-                is ViewState.Error -> {
+                Event.Loading -> binding.progress.visibility = View.VISIBLE
+                is Event.Error -> {
                     binding.progress.visibility = View.GONE
                     showSnackBar(view, it.errorMessage)
                 }
-                ViewState.Success -> binding.progress.visibility = View.GONE
+                Event.Success -> binding.progress.visibility = View.GONE
+                is Event.OpenUrl -> {
+                    if (it.url.isNotEmpty()) {
+                        openUrl(it.url, view)
+                    }
+                }
             }
         }
 
@@ -106,12 +111,6 @@ class NewsListFragment : Fragment() {
         viewModel.newsLiveData.distinctUntilChanged().observe(viewLifecycleOwner) {
             binding.progress.visibility = View.GONE
             adapter.submitList(it)
-        }
-
-        viewModel.urlLiveEvent.observe(viewLifecycleOwner) {
-            if (it.isNotEmpty()) {
-                openUrl(it, view)
-            }
         }
     }
 
