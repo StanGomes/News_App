@@ -1,9 +1,6 @@
 package com.stansdevhouse.newsapp.db
 
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
+import androidx.room.*
 
 @Dao
 interface NewsDao {
@@ -17,6 +14,19 @@ interface NewsDao {
     @Query("SELECT * FROM news_table WHERE type LIKE :type")
     fun getNewsByType(type: String): List<NewsEntity>
 
+    @Transaction
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertNews(allNews: List<NewsEntity>)
+    suspend fun insertNews(freshNews: List<NewsEntity>)
+
+    @Transaction
+    @Delete
+    suspend fun deleteOldNews(newsEntity: NewsEntity)
+
+    @Transaction
+    suspend fun insertAndDeleteOldNews(freshNews: List<NewsEntity>, oldNews: List<NewsEntity>) {
+        insertNews(freshNews)
+        oldNews.forEach {
+            deleteOldNews(it)
+        }
+    }
 }

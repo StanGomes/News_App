@@ -43,12 +43,15 @@ class NewsRepository @Inject constructor(
         when (val networkResult = remoteDataSource.fetchAllNews()) {
             RequestResult.Loading -> emit(RequestResult.Loading)
             is RequestResult.Success -> {
-                emit(RequestResult.Success(networkResult.news))
-                newsDao.insertNews(networkResult.news.toDbModel())
+                with(getCachedNews()){
+                    val freshNews = networkResult.news.toSet().minus(this).toList().toDbModel()
+                    val oldNews = this.toSet().minus(networkResult.news).toList().toDbModel()
+                    newsDao.insertAndDeleteOldNews(freshNews, oldNews)
+                }
+                emit(RequestResult.Success(getCachedNews()))
             }
             is RequestResult.Error -> emit(RequestResult.Error(networkResult.errorMessage))
         }
-
     }.flowOn(Dispatchers.IO)
 
     private fun getCachedNews(): List<News> = newsDao.getAllNews().toDomainModel(simpleDateFormat)
