@@ -8,10 +8,8 @@ import com.stansdevhouse.newsapp.domain.NewsRepository
 import com.stansdevhouse.newsapp.domain.RequestResult
 import com.stansdevhouse.newsapp.domain.model.News
 import com.stansdevhouse.newsapp.ui.NewsListViewModel
-import com.stansdevhouse.newsapp.ui.ViewState
 import io.mockk.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
@@ -19,7 +17,6 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -43,22 +40,25 @@ class NewsListViewModelTest {
     val instantTaskExecutorRule = InstantTaskExecutorRule()
 
     private val newsRepository = mockk<NewsRepository>()
-    private lateinit var viewModel: NewsListViewModel
     private val mainThreadSurrogate = newSingleThreadContext("UI thread")
+    private lateinit var viewModel: NewsListViewModel
 
 
     private fun createMockNews() : List<News> =
-        listOf(News(description = "News 1", id = 1),
-            News(description = "News 2", id = 2),
-            News(description = "News 3", id = 3),
-            News(description = "News 4", id = 4),
-            News(description = "News 5", id = 5),
-            News(description = "News 6", id = 6),
-            News(description = "News 7", id = 7),
-            News(description = "News 8", id = 8))
+        listOf(News(description = "News 1", id = 1, type = "video"),
+            News(description = "News 2", id = 2, type = "video"),
+            News(description = "News 3", id = 3, type = "story"),
+            News(description = "News 4", id = 4, type = "video"),
+            News(description = "News 5", id = 5, type = "video"),
+            News(description = "News 6", id = 6, type = "story"),
+            News(description = "News 7", id = 7, type = "content"),
+            News(description = "News 8", id = 8, type = "story"))
 
-    private fun createMockNewsType() : List<String> = listOf("news","content","media")
+    private val createMockNewsType = listOf("news","content","media")
 
+    private val mockVideoTypeNews = createMockNews().filter {
+        it.type == "video"
+    }
 
     @Before
     fun setup() {
@@ -75,7 +75,11 @@ class NewsListViewModelTest {
 
         coEvery {
             newsRepository.getAllTypes()
-        }.returns(flowOf(createMockNewsType()))
+        }.returns(flowOf(createMockNewsType))
+
+        coEvery {
+            newsRepository.getNewsByType("video")
+        }.returns(flowOf(mockVideoTypeNews))
     }
 
     @After
@@ -109,7 +113,21 @@ class NewsListViewModelTest {
         }
         //THEN update liveData with data
         val newsTypes = viewModel.newsTypeLiveData.getOrAwaitValue()
-        assertEquals(createMockNewsType(), newsTypes)
+        assertEquals(createMockNewsType, newsTypes)
+    }
+
+    @Test
+    fun whenFilterSelectedThenShouldFilteredNews() {
+        //GIVEN
+        viewModel = NewsListViewModel(newsRepository)
+
+        //WHEN
+        viewModel.getNews("video")
+
+        //THEN
+        val news = viewModel.newsLiveData.getOrAwaitValue()
+
+        assertEquals(mockVideoTypeNews, news)
     }
 }
 

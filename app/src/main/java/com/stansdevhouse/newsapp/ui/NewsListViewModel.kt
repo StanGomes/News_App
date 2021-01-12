@@ -80,10 +80,25 @@ class NewsListViewModel @ViewModelInject constructor(private val newsRepositoryD
                 }
         }
     }
-    //endregion
 
-    //region public helpers
-    fun refreshNews() {
+    private fun getNewsByType(typeString: String) {
+        viewModelScope.launch {
+            newsRepositoryDelegate
+                .getNewsByType(typeString)
+                .onStart {
+                    _newsListViewState.value = ViewState.Loading
+                }
+                .catch { e ->
+                    _newsListViewState.value =
+                        ViewState.Error(errorMessage = e.message ?: "Error fetching news")
+                }
+                .collect {
+                    _newsLiveData.value = it
+                }
+        }
+    }
+
+    private fun refreshNews() {
         viewModelScope.launch {
             newsRepositoryDelegate.refresh()
                 .onStart {
@@ -98,7 +113,7 @@ class NewsListViewModel @ViewModelInject constructor(private val newsRepositoryD
                         RequestResult.Loading ->  _newsListViewState.value = ViewState.Loading
                         is RequestResult.Success -> {
                             _newsListViewState.value = ViewState.Success
-                            filterChipSelected(selectedFilter)
+                            getNews(selectedFilter)
                             getAllTypes()
                         }
                         is RequestResult.Error -> {
@@ -111,26 +126,20 @@ class NewsListViewModel @ViewModelInject constructor(private val newsRepositoryD
         }
     }
 
-    fun filterChipSelected(type: CharSequence) {
+    //endregion
+
+    //region public helpers
+    fun refreshFabClicked() {
+        refreshNews()
+    }
+
+    fun getNews(type: CharSequence) {
         val typeString = type.toString()
         selectedFilter = typeString
-        if (typeString == ALL_TEXT) {
+        if (selectedFilter == ALL_TEXT) {
             getAllNews()
         } else {
-            viewModelScope.launch {
-                newsRepositoryDelegate
-                    .getNewsByType(typeString)
-                    .onStart {
-                        _newsListViewState.value = ViewState.Loading
-                    }
-                    .catch { e ->
-                        _newsListViewState.value =
-                            ViewState.Error(errorMessage = e.message ?: "Error fetching news")
-                    }
-                    .collect {
-                        _newsLiveData.value = it
-                    }
-            }
+            getNewsByType(typeString)
         }
     }
 

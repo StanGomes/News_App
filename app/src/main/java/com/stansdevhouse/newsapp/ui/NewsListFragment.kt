@@ -62,13 +62,13 @@ class NewsListFragment : Fragment() {
         binding.newsList.adapter = adapter
 
         binding.refreshBtn.setOnClickListener {
-            viewModel.refreshNews()
+            viewModel.refreshFabClicked()
         }
 
         binding.filterChipGroup.setOnCheckedChangeListener { group, checkedId ->
             val chip = group.findViewById<Chip>(checkedId)
             chip?.let {
-                viewModel.filterChipSelected(it.text)
+                viewModel.getNews(it.text)
             }
         }
     }
