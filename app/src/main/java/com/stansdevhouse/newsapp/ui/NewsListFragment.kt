@@ -10,6 +10,7 @@ import androidx.browser.customtabs.CustomTabsIntent
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.distinctUntilChanged
+import androidx.lifecycle.observe
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipDrawable
 import com.google.android.material.snackbar.Snackbar
@@ -73,7 +74,7 @@ class NewsListFragment : Fragment() {
     }
 
     private fun initObservers(view: View) {
-        viewModel.newsListViewState.observe(viewLifecycleOwner) {
+        viewModel.newsListViewState.distinctUntilChanged().observe(viewLifecycleOwner) {
             when (it) {
                 ViewState.Loading -> binding.progress.visibility = View.VISIBLE
                 is ViewState.Success -> {
@@ -84,7 +85,6 @@ class NewsListFragment : Fragment() {
                     binding.progress.visibility = View.GONE
                     showSnackBar(view, it.errorMessage)
                 }
-                is ViewState.OpenUrl -> openUrl(it.url, view)
             }
         }
 
@@ -103,6 +103,12 @@ class NewsListFragment : Fragment() {
                         setChipDrawable(chipDrawableStyle)
                     }
                 )
+            }
+        }
+
+        viewModel.urlLiveEvent.observe(viewLifecycleOwner) {
+            if (it.isNotEmpty()) {
+                openUrl(it, view)
             }
         }
     }

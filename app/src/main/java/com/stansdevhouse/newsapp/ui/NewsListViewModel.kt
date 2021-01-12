@@ -19,7 +19,6 @@ import kotlinx.coroutines.launch
 
 sealed class ViewState {
     object Loading : ViewState()
-    data class OpenUrl(val url: String): ViewState()
     data class Success(val news: List<News>) : ViewState()
     data class Error(val errorMessage: String) : ViewState()
 }
@@ -34,6 +33,9 @@ class NewsListViewModel @ViewModelInject constructor(private val newsRepositoryD
 
     private val _newsTypeLiveData = MutableLiveData<List<String>>()
     val newsTypeLiveData: LiveData<List<String>> = _newsTypeLiveData
+
+    private val _urlLiveEvent = MutableLiveData<String>()
+    val urlLiveEvent: LiveData<String> = _urlLiveEvent
     //endregion
 
     private companion object {
@@ -128,7 +130,7 @@ class NewsListViewModel @ViewModelInject constructor(private val newsRepositoryD
     }
 
     fun onCardClicked(url: String) {
-        _newsListViewState.value = ViewState.OpenUrl(url)
+        _urlLiveEvent.value = url
     }
     //endregion
 

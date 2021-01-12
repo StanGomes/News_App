@@ -44,9 +44,9 @@ class NewsRepository @Inject constructor(
             RequestResult.Loading -> emit(RequestResult.Loading)
             is RequestResult.Success -> {
                 with(getCachedNews()){
-                    val freshNews = networkResult.news.toSet().minus(this).toList().toDbModel()
-                    val oldNews = this.toSet().minus(networkResult.news).toList().toDbModel()
-                    newsDao.insertAndDeleteOldNews(freshNews, oldNews)
+                    val freshNews = networkResult.news
+                    val oldNews = this.filter { freshNews.contains(it) }
+                    newsDao.insertAndDeleteOldNews(freshNews.toDbModel(), oldNews.toDbModel())
                 }
                 emit(RequestResult.Success(getCachedNews()))
             }
