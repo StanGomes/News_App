@@ -41,12 +41,9 @@ class NewsRepository @Inject constructor(
 
     override suspend fun refresh(): Flow<RequestResult> = flow {
         when (val networkResult = remoteDataSource.fetchAllNews()) {
-            RequestResult.Loading -> emit(RequestResult.Loading)
             is RequestResult.Success -> {
-                with(getCachedNews()){
-                    val freshNews = networkResult.news
-                    val oldNews = this.filter { freshNews.contains(it) }
-                    newsDao.insertAndDeleteOldNews(freshNews.toDbModel(), oldNews.toDbModel())
+                with(networkResult.news) {
+                    newsDao.insertAndDeleteOldNews(this.toDbModel(), this.map { it.id })
                 }
                 emit(RequestResult.Success(getCachedNews()))
             }

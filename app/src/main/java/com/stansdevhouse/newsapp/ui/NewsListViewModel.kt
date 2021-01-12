@@ -20,7 +20,6 @@ import kotlinx.coroutines.launch
 
 sealed class ViewState {
     object Loading : ViewState()
-    data class Success(val news: List<News>) : ViewState()
     data class Error(val errorMessage: String) : ViewState()
 }
 
@@ -29,8 +28,11 @@ sealed class ViewState {
 class NewsListViewModel @ViewModelInject constructor(private val newsRepositoryDelegate: NewsRepositoryDelegate) : ViewModel() {
 
     //region liveData
-    private val _newsListViewState = MutableLiveData<ViewState>(ViewState.Loading)
+    private val _newsListViewState = MutableLiveData<ViewState>()
     val newsListViewState: LiveData<ViewState> = _newsListViewState
+
+    private val _newsLiveData = MutableLiveData<List<News>>()
+    val newsLiveData: LiveData<List<News>> = _newsLiveData
 
     private val _newsTypeLiveData = MutableLiveData<List<String>>()
     val newsTypeLiveData: LiveData<List<String>> = _newsTypeLiveData
@@ -73,7 +75,7 @@ class NewsListViewModel @ViewModelInject constructor(private val newsRepositoryD
                         ViewState.Error(errorMessage = e.message ?: "Error fetching news")
                 }
                 .collectLatest {
-                    _newsListViewState.value = ViewState.Success(news = it)
+                    _newsLiveData.value = it
                 }
         }
     }
@@ -124,7 +126,7 @@ class NewsListViewModel @ViewModelInject constructor(private val newsRepositoryD
                             ViewState.Error(errorMessage = e.message ?: "Error fetching news")
                     }
                     .collect {
-                        _newsListViewState.value = ViewState.Success(it)
+                        _newsLiveData.value = it
                     }
             }
         }

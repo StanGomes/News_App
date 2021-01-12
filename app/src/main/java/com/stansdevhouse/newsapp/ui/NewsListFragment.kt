@@ -77,10 +77,6 @@ class NewsListFragment : Fragment() {
         viewModel.newsListViewState.distinctUntilChanged().observe(viewLifecycleOwner) {
             when (it) {
                 ViewState.Loading -> binding.progress.visibility = View.VISIBLE
-                is ViewState.Success -> {
-                    binding.progress.visibility = View.GONE
-                    adapter.submitList(it.news)
-                }
                 is ViewState.Error -> {
                     binding.progress.visibility = View.GONE
                     showSnackBar(view, it.errorMessage)
@@ -104,6 +100,11 @@ class NewsListFragment : Fragment() {
                     }
                 )
             }
+        }
+
+        viewModel.newsLiveData.distinctUntilChanged().observe(viewLifecycleOwner) {
+            binding.progress.visibility = View.GONE
+            adapter.submitList(it)
         }
 
         viewModel.urlLiveEvent.observe(viewLifecycleOwner) {

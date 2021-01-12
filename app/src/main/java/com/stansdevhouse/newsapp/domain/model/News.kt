@@ -3,13 +3,13 @@ package com.stansdevhouse.newsapp.domain.model
 data class News(
     val description: String,
     val id: Int,
-    val publishedAt: Long?,
-    val source: String?,
-    val sourceId: String?,
-    val title: String?,
-    val type: String?,
-    val typeAttributes: TypeAttributes?,
-    val updatedAt: Long?,
+    val publishedAt: Long? = null,
+    val source: String? = null,
+    val sourceId: String? = null,
+    val title: String? = null,
+    val type: String? = null,
+    val typeAttributes: TypeAttributes? = null,
+    val updatedAt: Long? = null,
     val readablePublishedAt: String? = null
 )
 

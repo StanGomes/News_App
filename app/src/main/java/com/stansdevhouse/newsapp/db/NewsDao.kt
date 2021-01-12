@@ -19,14 +19,12 @@ interface NewsDao {
     suspend fun insertNews(freshNews: List<NewsEntity>)
 
     @Transaction
-    @Delete
-    suspend fun deleteOldNews(newsEntity: NewsEntity)
+    @Query("DELETE FROM news_table WHERE id NOT IN(:idList)")
+    suspend fun deleteOldNews(idList: List<Int>)
 
     @Transaction
-    suspend fun insertAndDeleteOldNews(freshNews: List<NewsEntity>, oldNews: List<NewsEntity>) {
+    suspend fun insertAndDeleteOldNews(freshNews: List<NewsEntity>, idList: List<Int>) {
         insertNews(freshNews)
-        oldNews.forEach {
-            deleteOldNews(it)
-        }
+        deleteOldNews(idList)
     }
 }
