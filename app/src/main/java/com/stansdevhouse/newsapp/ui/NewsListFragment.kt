@@ -74,7 +74,7 @@ class NewsListFragment : Fragment() {
     }
 
     private fun initObservers(view: View) {
-        viewModel.newsListViewState.distinctUntilChanged().observe(viewLifecycleOwner) {
+        viewModel.newsListViewState.observe(viewLifecycleOwner) {
             when (it) {
                 ViewState.Loading -> binding.progress.visibility = View.VISIBLE
                 is ViewState.Error -> {
