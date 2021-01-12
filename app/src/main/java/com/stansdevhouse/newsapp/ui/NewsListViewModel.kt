@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.stansdevhouse.newsapp.domain.NewsRepositoryDelegate
 import com.stansdevhouse.newsapp.domain.RequestResult
 import com.stansdevhouse.newsapp.domain.model.News
+import com.stansdevhouse.newsapp.util.LiveEvent
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.catch
@@ -34,8 +35,8 @@ class NewsListViewModel @ViewModelInject constructor(private val newsRepositoryD
     private val _newsTypeLiveData = MutableLiveData<List<String>>()
     val newsTypeLiveData: LiveData<List<String>> = _newsTypeLiveData
 
-    private val _urlLiveEvent = MutableLiveData<String>()
-    val urlLiveEvent: LiveData<String> = _urlLiveEvent
+    private val _urlLiveEvent = LiveEvent<String>()
+    val urlLiveEvent = _urlLiveEvent
     //endregion
 
     private companion object {
