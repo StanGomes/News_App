@@ -81,6 +81,7 @@ class NewsListFragment : Fragment() {
                     binding.progress.visibility = View.GONE
                     showSnackBar(view, it.errorMessage)
                 }
+                ViewState.Success -> binding.progress.visibility = View.GONE
             }
         }
 

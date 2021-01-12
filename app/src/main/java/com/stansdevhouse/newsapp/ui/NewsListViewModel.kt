@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 
 sealed class ViewState {
     object Loading : ViewState()
+    object Success : ViewState()
     data class Error(val errorMessage: String) : ViewState()
 }
 
@@ -96,6 +97,7 @@ class NewsListViewModel @ViewModelInject constructor(private val newsRepositoryD
                     when (it) {
                         RequestResult.Loading ->  _newsListViewState.value = ViewState.Loading
                         is RequestResult.Success -> {
+                            _newsListViewState.value = ViewState.Success
                             filterChipSelected(selectedFilter)
                             getAllTypes()
                         }
