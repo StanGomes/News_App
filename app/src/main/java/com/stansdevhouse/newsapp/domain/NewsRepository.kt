@@ -3,9 +3,10 @@ package com.stansdevhouse.newsapp.domain
 import com.stansdevhouse.newsapp.db.NewsDao
 import com.stansdevhouse.newsapp.db.toDbModel
 import com.stansdevhouse.newsapp.db.toDomainModel
+import com.stansdevhouse.newsapp.di.IoDispatcher
 import com.stansdevhouse.newsapp.domain.model.News
 import com.stansdevhouse.newsapp.network.RemoteDataSource
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -17,7 +18,8 @@ import javax.inject.Inject
 @ExperimentalCoroutinesApi
 class NewsRepository @Inject constructor(
     private val remoteDataSource: RemoteDataSource,
-    private val newsDao: NewsDao
+    private val newsDao: NewsDao,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : NewsRepositoryDelegate {
 
     private val simpleDateFormat by lazy {
@@ -29,15 +31,15 @@ class NewsRepository @Inject constructor(
 
     override fun getAllNews(): Flow<List<News>> = flow {
         emit(getCachedNews())
-    }.flowOn(Dispatchers.IO)
+    }.flowOn(ioDispatcher)
 
     override fun getAllTypes(): Flow<List<String>> = flow {
         emit(newsDao.getTypes().map { it.capitalize(Locale.getDefault()) })
-    }.flowOn(Dispatchers.IO)
+    }.flowOn(ioDispatcher)
 
     override fun getNewsByType(type: String): Flow<List<News>> = flow {
         emit(newsDao.getNewsByType(type).toDomainModel(simpleDateFormat))
-    }.flowOn(Dispatchers.IO)
+    }.flowOn(ioDispatcher)
 
     override suspend fun refresh(): Flow<RequestResult> = flow {
         when (val networkResult = remoteDataSource.fetchAllNews()) {
@@ -49,7 +51,7 @@ class NewsRepository @Inject constructor(
             }
             is RequestResult.Error -> emit(RequestResult.Error(networkResult.errorMessage))
         }
-    }.flowOn(Dispatchers.IO)
+    }.flowOn(ioDispatcher)
 
     private fun getCachedNews(): List<News> = newsDao.getAllNews().toDomainModel(simpleDateFormat)
 
