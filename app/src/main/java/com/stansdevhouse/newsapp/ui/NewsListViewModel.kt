@@ -37,6 +37,9 @@ class NewsListViewModel @ViewModelInject constructor(private val newsRepositoryD
 
     private val _newsTypeLiveData = MutableLiveData<List<String>>()
     val newsTypeLiveData: LiveData<List<String>> = _newsTypeLiveData
+
+    private val _checkedFilterId = MutableLiveData<Int>()
+    val checkedFilterId: LiveData<Int> = _checkedFilterId
     //endregion
 
     private companion object {
@@ -90,6 +93,7 @@ class NewsListViewModel @ViewModelInject constructor(private val newsRepositoryD
                         Event.Error(errorMessage = e.message ?: "Error fetching news")
                 }
                 .collect {
+                    liveEvent.value = Event.Success
                     _newsLiveData.value = it
                 }
         }
@@ -130,7 +134,10 @@ class NewsListViewModel @ViewModelInject constructor(private val newsRepositoryD
         refreshNews()
     }
 
-    fun getNews(type: CharSequence) {
+    fun getNews(type: CharSequence, checkedId: Int? = null) {
+        checkedId?.let {
+            _checkedFilterId.value = it
+        }
         val typeString = type.toString()
         selectedFilter = typeString
         if (selectedFilter == ALL_TEXT) {

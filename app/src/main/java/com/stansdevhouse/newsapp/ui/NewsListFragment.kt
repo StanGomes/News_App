@@ -68,7 +68,7 @@ class NewsListFragment : Fragment() {
         binding.filterChipGroup.setOnCheckedChangeListener { group, checkedId ->
             val chip = group.findViewById<Chip>(checkedId)
             chip?.let {
-                viewModel.getNews(it.text)
+                viewModel.getNews(it.text, checkedId)
             }
         }
     }
@@ -111,6 +111,10 @@ class NewsListFragment : Fragment() {
         viewModel.newsLiveData.distinctUntilChanged().observe(viewLifecycleOwner) {
             binding.progress.visibility = View.GONE
             adapter.submitList(it)
+        }
+
+        viewModel.checkedFilterId.observe(viewLifecycleOwner) {
+            binding.filterChipGroup.check(it)
         }
     }
 
