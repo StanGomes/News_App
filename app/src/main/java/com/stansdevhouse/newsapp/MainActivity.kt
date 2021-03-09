@@ -1,6 +1,7 @@
 package com.stansdevhouse.newsapp
 
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.distinctUntilChanged
 import com.google.android.material.snackbar.Snackbar
@@ -21,15 +22,24 @@ class MainActivity : AppCompatActivity() {
         MainActivityBinding.inflate(layoutInflater).apply {
             setContentView(this.root)
         }
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            window.setDecorFitsSystemWindows(false)
+        } else {
+            window.decorView.systemUiVisibility =
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+        }
+//        window.statusBarColor = ContextWrapper(this).getColor(android.R.color.transparent)
+//        window.navigationBarColor = ContextWrapper(this).getColor(android.R.color.transparent)
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
                 .replace(R.id.container, NewsListFragment.newInstance())
                 .commitNow()
         }
 
-        ConnectionStateLiveData(this).distinctUntilChanged().observe(this){ connected ->
+        ConnectionStateLiveData(this).distinctUntilChanged().observe(this) { connected ->
             if (!connected) {
-                Snackbar.make(this.window.decorView, "Connection Lost!", Snackbar.LENGTH_LONG).show()
+                Snackbar.make(this.window.decorView, "Connection Lost!", Snackbar.LENGTH_LONG)
+                    .show()
             }
         }
     }

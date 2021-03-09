@@ -7,6 +7,10 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.browser.customtabs.CustomTabColorSchemeParams
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.view.ViewCompat
+import androidx.core.view.marginBottom
+import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.distinctUntilChanged
@@ -59,6 +63,8 @@ class NewsListFragment : Fragment() {
 
     //region private helpers
     private fun initViews() {
+        setWindowInsets()
+
         binding.newsList.adapter = adapter
 
         binding.refreshBtn.setOnClickListener {
@@ -70,6 +76,26 @@ class NewsListFragment : Fragment() {
             chip?.let {
                 viewModel.getNews(it.text, checkedId)
             }
+        }
+    }
+
+    private fun setWindowInsets() {
+        val layoutParams = binding.refreshBtn.layoutParams as CoordinatorLayout.LayoutParams
+        val refreshMargin = binding.refreshBtn.marginBottom
+        ViewCompat.setOnApplyWindowInsetsListener(binding.filterChipGroup) { v, insets ->
+            v.updatePadding(top = insets.systemWindowInsetTop)
+            insets
+        }
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.refreshBtn) { v, insets ->
+            layoutParams.bottomMargin = insets.systemWindowInsetBottom + refreshMargin
+            v.layoutParams = layoutParams
+            insets
+        }
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.newsList) { v, insets ->
+            v.updatePadding(bottom = insets.systemWindowInsetBottom)
+            insets
         }
     }
 
@@ -124,12 +150,18 @@ class NewsListFragment : Fragment() {
             val webPage = Uri.parse(url)
             val customTabIntent = CustomTabsIntent
                 .Builder()
-                .setDefaultColorSchemeParams(CustomTabColorSchemeParams
-                    .Builder()
-                    .setToolbarColor(resources.getColor(R.color.red_500, null))
-                    .build())
+                .setDefaultColorSchemeParams(
+                    CustomTabColorSchemeParams
+                        .Builder()
+                        .setToolbarColor(resources.getColor(R.color.red_500, null))
+                        .build()
+                )
                 .setStartAnimations(requireContext(), R.anim.slide_in_right, R.anim.slide_out_left)
-                .setExitAnimations(requireContext(), android.R.anim.slide_in_left, android.R.anim.slide_out_right)
+                .setExitAnimations(
+                    requireContext(),
+                    android.R.anim.slide_in_left,
+                    android.R.anim.slide_out_right
+                )
                 .build()
             customTabIntent.launchUrl(requireContext(), webPage)
         } catch (e: NullPointerException) {
